@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { client } from './discord';
+import { AppModule } from './app/app.module';
+import { client } from './discord/discord';
 import { config } from 'dotenv';
 config();
 

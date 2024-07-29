@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { channel } from './discord';
+import { channel } from '../discord/discord';
 
 @Injectable()
 export class AppService {
