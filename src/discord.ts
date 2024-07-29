@@ -7,7 +7,7 @@ let channel;
 
 client.on('ready', () => {
   
-  console.log(`SERVER STARTED! Logged in as ${client.user.tag}!`);
+  console.log(`SERVER READY! Logged in as ${client.user.tag}!`);
   channel = client.channels.cache.get(process.env.DISCORD_CHANNEL) as TextChannel;
   if (!channel) {
       console.error('Channel not found');
@@ -24,8 +24,5 @@ client.on('messageCreate', message => {
       message.channel.send('pong');
   }
 });
-
-
-; //remove later
 
 export { client, channel };

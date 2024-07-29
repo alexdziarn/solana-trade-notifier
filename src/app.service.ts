@@ -3,13 +3,12 @@ import { channel } from './discord';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    
+  messageDiscord(message: string): string {
     if (!channel) {
         console.error('Channel not found');
         return;
     }
-    channel.send("SWAP DETECTED!").catch(console.error);
-    return 'Hello World!';
+    channel.send(message).catch(console.error);
+    return 'Successfully sent discord message';
   }
 }
