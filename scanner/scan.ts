@@ -1,7 +1,7 @@
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
-import { getTokenMetadata, TOKEN_2022_PROGRAM_ID, getMint, getMetadataPointerState } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, getMint, TOKEN_2022_PROGRAM_ID, getExtensionTypes, ExtensionType } from '@solana/spl-token';
 import { TokenListProvider, TokenInfo, } from '@solana/spl-token-registry';
-import { Metadata, PROGRAM_ID as METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { deserialize } from "@metaplex-foundation/mpl-token-metadata";
 import { config } from 'dotenv';
 config();
 
@@ -28,42 +28,47 @@ async function fetchMostRecentTransaction(publicKey: string) {
 
     type Data = {
       token: string,
-      change: number
+      change: number,
+      programId: string
     }
+    // console.log("meta", transaction?.meta)
     const preAmount: number = Number(transaction.meta.preTokenBalances[0].uiTokenAmount.amount)
     const postAmount: number = Number(transaction.meta.postTokenBalances[0].uiTokenAmount.amount)
+    // console.log(transaction.meta.preTokenBalances[0])
     let data: Data = {
       token: transaction.meta.preTokenBalances[0].mint,
-      change: postAmount - preAmount 
+      change: postAmount - preAmount,
+      programId: transaction.meta.preTokenBalances[0].programId
     }
-    const tokenInfo = getTokenInfo(data.token);
     console.log('Most recent transaction:', data);
+    const tokenInfo = getTokenInfo(data.token, data.programId);
 
   } catch (error) {
     console.error('Error fetching transactions:', error);
   }
 }
 
-async function getTokenInfo(tokenAddress: string): Promise<void> {
+async function getTokenInfo(mintAddress: string, pid: string): Promise<void> {
+  // const mintPublicKey = new PublicKey(mintAddress);
+  // const programId = new PublicKey(pid)
   try {
-    const mintPublicKey = new PublicKey(tokenAddress);
-
+    const mintPublicKey = new PublicKey(mintAddress);
+    const programId = new PublicKey(pid)
     // Derive the metadata account address
     const [metadataAddress] = await PublicKey.findProgramAddress(
       [
         Buffer.from('metadata'),
-        METADATA_PROGRAM_ID.toBuffer(),
+        programId.toBuffer(),
         mintPublicKey.toBuffer(),
       ],
-      METADATA_PROGRAM_ID
+      programId
     );
 
     // Fetch the metadata account information
     const accountInfo = await connection.getAccountInfo(metadataAddress);
 
     if (accountInfo) {
-      // Metadata accounts are serialized data, so you'll need to use the Metadata class to deserialize
-      const metadata = Metadata.deserialize(accountInfo.data);
+      const metadata = deserialize(accountInfo.data);
       console.log('Token name:', metadata[0].data.name);
       console.log('Token symbol:', metadata[0].data.symbol);
       console.log('Token URI:', metadata[0].data.uri);
@@ -71,7 +76,7 @@ async function getTokenInfo(tokenAddress: string): Promise<void> {
       console.log('Metadata not found for this token.');
     }
   } catch (error) {
-    console.error('Error fetching token information:', error);
+    console.error('Error fetching token metadata:', error);
   }
 }
 
